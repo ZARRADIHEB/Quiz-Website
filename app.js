@@ -46,7 +46,7 @@
 
   const apiClient = {
     async request(path, options = {}) {
-      const baseURL = window.location.origin.includes("localhost:3000") ? "" : "http://localhost:3000";
+      const baseURL = "https://quiz-website-g3ie.onrender.com";
       const headers = {
         "Content-Type": "application/json",
         ...(options.headers || {})
