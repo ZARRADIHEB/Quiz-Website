@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Deutsch-Arabic Quiz Trainer</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Noto+Sans+Arabic:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="bg-orb orb-a" aria-hidden="true"></div>
+    <div class="bg-orb orb-b" aria-hidden="true"></div>
+
+    <header class="topbar glass">
+      <div class="brand">
+        <h1>Deutsch-Arabic Quiz Trainer</h1>
+        <p>Build your sentence bank and train smarter every day.</p>
+      </div>
+      <div class="topbar-actions">
+        <button id="dailyQuizBtn" class="btn btn-soft" type="button" aria-label="Start random daily quiz">
+          Daily Quiz
+        </button>
+        <button id="themeToggle" class="btn btn-icon" type="button" aria-label="Toggle dark mode">
+          <span aria-hidden="true">☾</span>
+        </button>
+      </div>
+    </header>
+
+    <main class="app-shell">
+      <section class="stats-row" aria-live="polite">
+        <article class="stat-card glass">
+          <h2>Saved Sentences</h2>
+          <p id="totalSentences">0</p>
+        </article>
+        <article class="stat-card glass">
+          <h2>Current Streak</h2>
+          <p id="streakCount">0 days</p>
+        </article>
+      </section>
+
+      <nav class="tabs glass" aria-label="Main sections">
+        <button class="tab-btn active" data-view="managerView" type="button">Sentence Manager</button>
+        <button class="tab-btn" data-view="quizSetupView" type="button">Quiz Creator</button>
+      </nav>
+
+      <section id="managerView" class="view active" aria-labelledby="managerHeading">
+        <h2 id="managerHeading">Sentence Manager</h2>
+
+        <div class="panel glass">
+          <div class="input-grid">
+            <label for="germanInput">German Sentence</label>
+            <textarea id="germanInput" rows="3" placeholder="z. B. Ich lerne jeden Tag Deutsch." aria-label="German sentence"></textarea>
+
+            <label for="arabicInput">Arabic Translation</label>
+            <textarea
+              id="arabicInput"
+              class="arabic"
+              dir="rtl"
+              rows="3"
+              placeholder="مثال: أنا أتعلم الألمانية كل يوم."
+              aria-label="Arabic translation"
+            ></textarea>
+          </div>
+
+          <div class="btn-row">
+            <button id="saveSentenceBtn" class="btn btn-primary" type="button">Save Sentence</button>
+            <button id="clearFieldsBtn" class="btn btn-ghost" type="button">Clear Fields</button>
+          </div>
+        </div>
+
+        <div class="panel glass tools-panel">
+          <div class="tools-row">
+            <input id="searchInput" type="search" placeholder="Search German or Arabic..." aria-label="Search saved sentences" />
+            <button id="exportBtn" class="btn btn-soft" type="button">Export JSON</button>
+            <button id="importBtn" class="btn btn-soft" type="button">Import JSON</button>
+            <input id="importFileInput" type="file" accept="application/json" hidden />
+          </div>
+        </div>
+
+        <div id="sentenceList" class="sentence-list" aria-live="polite"></div>
+      </section>
+
+      <section id="quizSetupView" class="view" aria-labelledby="quizSetupHeading">
+        <h2 id="quizSetupHeading">Quiz Creator</h2>
+
+        <div class="panel glass">
+          <div class="quiz-grid">
+            <label for="questionCountSelect">Number of Questions</label>
+            <select id="questionCountSelect" aria-label="Number of questions"></select>
+
+            <fieldset class="fieldset">
+              <legend>Direction</legend>
+              <label><input type="radio" name="direction" value="ar_to_de" checked /> Show Arabic -> Guess German</label>
+              <label><input type="radio" name="direction" value="de_to_ar" /> Show German -> Guess Arabic</label>
+            </fieldset>
+
+            <fieldset class="fieldset">
+              <legend>Answer Mode</legend>
+              <label><input type="radio" name="answerMode" value="multiple" checked /> Multiple choice</label>
+              <label><input type="radio" name="answerMode" value="writing" /> Write answer manually</label>
+            </fieldset>
+
+            <fieldset class="fieldset">
+              <legend>Extra Options</legend>
+              <label><input id="shuffleToggle" type="checkbox" checked /> Shuffle questions</label>
+              <label><input id="timerToggle" type="checkbox" /> Timer (20s each)</label>
+              <label><input id="feedbackToggle" type="checkbox" checked /> Show instant feedback</label>
+            </fieldset>
+          </div>
+
+          <div class="btn-row">
+            <button id="startQuizBtn" class="btn btn-primary" type="button">Start Quiz</button>
+          </div>
+        </div>
+      </section>
+
+      <section id="quizModeView" class="view" aria-labelledby="quizModeHeading">
+        <h2 id="quizModeHeading">Quiz Mode</h2>
+
+        <div class="panel glass">
+          <div class="quiz-meta">
+            <div id="progressText">Question 1/1</div>
+            <div id="timerText" class="timer hidden" aria-live="polite">20s</div>
+          </div>
+          <div class="progress-track" aria-hidden="true">
+            <div id="progressFill" class="progress-fill"></div>
+          </div>
+
+          <article id="quizCard" class="quiz-card">
+            <p id="promptText" class="prompt"></p>
+            <div id="answersContainer" class="answers"></div>
+            <p id="feedbackText" class="feedback" aria-live="polite"></p>
+          </article>
+
+          <div class="btn-row">
+            <button id="nextQuestionBtn" class="btn btn-primary" type="button">Next</button>
+            <button id="exitQuizBtn" class="btn btn-ghost" type="button">Back to Manager</button>
+          </div>
+        </div>
+      </section>
+
+      <section id="resultsView" class="view" aria-labelledby="resultsHeading">
+        <h2 id="resultsHeading">Quiz Results</h2>
+        <div class="panel glass result-panel">
+          <p id="resultScore" class="result-score"></p>
+          <p id="resultPercentage" class="result-percentage"></p>
+          <p id="resultMessage" class="result-message"></p>
+          <div class="btn-row">
+            <button id="retryQuizBtn" class="btn btn-primary" type="button">Retry Quiz</button>
+            <button id="backToManagerBtn" class="btn btn-ghost" type="button">Back to Manager</button>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+    <template id="emptyStateTemplate">
+      <div class="empty-state glass">
+        <h3>No sentences yet</h3>
+        <p>Save your first German-Arabic pair to unlock quiz mode.</p>
+      </div>
+    </template>
+
+    <script src="app.js"></script>
+  </body>
+</html>
