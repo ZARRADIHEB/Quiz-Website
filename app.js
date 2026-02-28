@@ -46,26 +46,41 @@
 
   const apiClient = {
     async request(path, options = {}) {
-      const response = await fetch(`/api${path}`, {
-        headers: {
-          "Content-Type": "application/json"
-        },
-        ...options
-      });
+      const baseURL = window.location.origin.includes("localhost:3000") ? "" : "http://localhost:3000";
+      const headers = {
+        "Content-Type": "application/json",
+        ...(options.headers || {})
+      };
+
+      let response;
+      try {
+        response = await fetch(`${baseURL}/api${path}`, {
+          headers,
+          ...options
+        });
+      } catch {
+        throw new Error("Cannot reach API server. Start server with npm start.");
+      }
+
+      const raw = await response.text();
+      let body = null;
+      if (raw) {
+        try {
+          body = JSON.parse(raw);
+        } catch {
+          body = raw;
+        }
+      }
 
       if (!response.ok) {
-        let message = "Request failed.";
-        try {
-          const body = await response.json();
-          if (body && body.error) message = body.error;
-        } catch {
-          // Ignore parse errors; use default message.
-        }
+        let message = `Request failed (${response.status}).`;
+        if (body && typeof body === "object" && body.error) message = body.error;
+        else if (typeof body === "string" && body.trim()) message = body;
         throw new Error(message);
       }
 
       if (response.status === 204) return null;
-      return response.json();
+      return body;
     }
   };
 
@@ -101,18 +116,19 @@
         body: JSON.stringify(sentences)
       });
       const list = await this.getSentences();
-      return { inserted: Number(result.inserted || 0), list };
+      return { inserted: Number((result && result.inserted) || 0), list };
     },
 
     async getSettings() {
       return apiClient.request("/settings");
     },
 
-    async setTheme(theme) {
-      return apiClient.request("/settings/theme", {
-        method: "PATCH",
-        body: JSON.stringify({ theme })
-      });
+    getTheme() {
+      return localStorage.getItem("de_ar_theme") || "light";
+    },
+
+    setTheme(theme) {
+      localStorage.setItem("de_ar_theme", theme);
     },
 
     async updateStreak() {
@@ -251,14 +267,14 @@
     },
 
     async init() {
+      this.applyTheme(storageManager.getTheme());
+
       try {
         const [sentences, settings] = await Promise.all([storageManager.getSentences(), storageManager.getSettings()]);
-        this.state.sentenceList = sentences;
-        this.state.streak = Number(settings.streak || 0);
-        this.applyTheme(settings.theme || "light");
+        this.state.sentenceList = Array.isArray(sentences) ? sentences : [];
+        this.state.streak = Number((settings && settings.streak) || 0);
       } catch (error) {
         animationHelpers.showToast(error.message || "Failed to load data from server.");
-        this.applyTheme("light");
       }
 
       this.renderSentenceList();
@@ -714,12 +730,7 @@
       const current = document.body.classList.contains("dark") ? "dark" : "light";
       const next = current === "dark" ? "light" : "dark";
       this.applyTheme(next);
-      try {
-        await storageManager.setTheme(next);
-      } catch {
-        this.applyTheme(current);
-        animationHelpers.showToast("Could not save theme.");
-      }
+      storageManager.setTheme(next);
     },
 
     applyTheme(theme) {
